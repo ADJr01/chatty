@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, Generator, Optional, Any, Union
 
 class ModelList(TypedDict):
+    DEEP_SEEK_R1_8B= 'deepseek-r1:8b',
     GEMMA3_12B= 'gemma3:12b' # ? Overall Good
     QWEN3_8B= 'qwen3-vl:8b' # ! LONG THINKER
     LLAMA_3B= 'llama3.2:3b' # ? Smart One

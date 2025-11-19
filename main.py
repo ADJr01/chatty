@@ -90,7 +90,7 @@ if __name__ == "__main__":
         reply = llm.chat_with_ollama({
                 "system_prompt": SYS_PROMPT,
                 "user_prompt": query,
-                "model":"gemma3:12b",
+                "model":"deepseek-r1:8b",
                 "stream_reasoning_response": True,
                 'temperature': temp
                 })
