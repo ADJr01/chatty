@@ -14,8 +14,6 @@ class ModelList(TypedDict):
     QWEN25_CODER_7= 'qwen2.5-coder:7b' # ? MR.CODER
 
 
-
-
 def chat_with_ollama(config: Dict[str, Any]) -> Any:
     """
     Chat with local Ollama LLM following OpenAI-style API patterns.
@@ -35,6 +33,10 @@ def chat_with_ollama(config: Dict[str, Any]) -> Any:
                     3. Dict with JSON schema: {"type": "object", "properties": {...}}
                 - file_path (str): Path to image/file/video/audio to include with prompt
                 - stream_reasoning_response (bool): Enable streaming with reasoning
+                - thinking (bool): Enable reasoning/thinking mode (default: False)
+                - enable_web_search (bool): Enable web search tool capability
+                - search_api (str): Search API to use ('duckduckgo', 'google', 'serper')
+                - search_api_key (str): API key for search service (if required)
                 - temperature (float): Sampling temperature (default: 0.7)
                 - max_tokens (int): Maximum tokens to generate
                 - top_p (float): Nucleus sampling parameter
@@ -105,6 +107,16 @@ def chat_with_ollama(config: Dict[str, Any]) -> Any:
 
     if options:
         payload['options'] = options
+
+    # Handle thinking/reasoning mode
+    if 'thinking' in config:
+        payload['thinking'] = config['thinking']
+
+    # Handle web search tools
+    if config.get('enable_web_search', False):
+        tools = _build_search_tools(config)
+        if tools:
+            payload['tools'] = tools
 
     # Handle response_format - convert to Ollama's 'format' parameter
     if 'response_format' in config:
@@ -229,4 +241,107 @@ def _stream_response(url: str, payload: Dict) -> Generator[str, None, None]:
     except requests.RequestException as e:
         raise requests.RequestException(f"Streaming request failed: {str(e)}")
 
+
+def _build_search_tools(config: Dict) -> list[Dict]:
+    """
+    Build web search tool definitions for Ollama.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        List of tool definitions
+    """
+    search_api = config.get('search_api', 'duckduckgo')
+
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "web_search",
+                "description": "Search the web for current information and real-time data",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The search query to find information"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+        }
+    ]
+
+    return tools
+
+
+def web_search(query: str, search_api: str = 'duckduckgo', api_key: str = None) -> str:
+    """
+    Perform web search using specified search API.
+
+    Args:
+        query: Search query string
+        search_api: Search API to use ('duckduckgo', 'google', 'serper')
+        api_key: API key for the search service (if required)
+
+    Returns:
+        Search results as string
+    """
+    try:
+        if search_api == 'duckduckgo':
+            # DuckDuckGo Instant Answer API (no key required)
+            response = requests.get(
+                "https://api.duckduckgo.com/",
+                params={"q": query, "format": "json"},
+                timeout=10
+            )
+            data = response.json()
+
+            # Combine abstract and related topics
+            result = data.get("AbstractText", "")
+            if not result and data.get("RelatedTopics"):
+                topics = [t.get("Text", "") for t in data.get("RelatedTopics", [])[:3]]
+                result = " ".join(topics)
+
+            return result if result else "No results found."
+
+        elif search_api == 'google' and api_key:
+            # Google Custom Search API (requires API key)
+            response = requests.get(
+                "https://www.googleapis.com/customsearch/v1",
+                params={
+                    "key": api_key,
+                    "cx": config.get('google_cx'),  # Custom search engine ID
+                    "q": query
+                },
+                timeout=10
+            )
+            data = response.json()
+            items = data.get("items", [])[:3]
+            results = [f"{item['title']}: {item['snippet']}" for item in items]
+            return "\n".join(results) if results else "No results found."
+
+        elif search_api == 'serper' and api_key:
+            # Serper.dev API (requires API key)
+            response = requests.post(
+                "https://google.serper.dev/search",
+                headers={
+                    "X-API-KEY": api_key,
+                    "Content-Type": "application/json"
+                },
+                json={"q": query},
+                timeout=10
+            )
+            data = response.json()
+            organic = data.get("organic", [])[:3]
+            results = [f"{item['title']}: {item['snippet']}" for item in organic]
+            return "\n".join(results) if results else "No results found."
+
+        else:
+            return "Search API not configured or API key missing."
+
+    except Exception as e:
+        return f"Search failed: {str(e)}"
 
