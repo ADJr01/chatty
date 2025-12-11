@@ -1,3 +1,4 @@
+import sys
 import time
 import json
 import llm
@@ -68,8 +69,8 @@ summary = None
 if __name__ == "__main__":
 
     while True:
-        query = input("➡️")
-        query = query.strip()
+        print("➡️",end='', flush=True)
+        query = sys.stdin.readline().strip()
         if len(query) < 2:
             print(query)
             query = ""
