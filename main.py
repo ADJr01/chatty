@@ -4,9 +4,8 @@ import json
 import llm
 
 SYS_PROMPT = """
-You are Jon. You are a friendly and direct helper. 
-You talk to Adnan in a natural, clear tone.
-You need to Follow the orders precisely.
+You are Jon. You are a helpful assistant. 
+Given the user's message, you should answer those wisely.
 """
 
 
@@ -39,7 +38,7 @@ def chat_intent_detector(query):
                 0.7 – 1.1 → Creative and expressive
                 Use for: storytelling, conversational tone, brainstorming, informal writing.
                 
-                1.2 – 1.5+ → Highly creative / unpredictable
+                1.2 – 1.5+ → Highly creative / unpredictable 
                 Use for: poetry, fiction, wild ideas, humor, unusual metaphors.
                 Your response must be in JSON with this format:
                 {
