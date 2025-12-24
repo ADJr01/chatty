@@ -80,7 +80,7 @@ if __name__ == "__main__":
         if len(conversation_hist) > 1:  # getting summary
             # ! SUMMARIZER
             summary = llm.chat_with_ollama({
-                "system_prompt": "Summarize conversation between user and assistant.Analyze the context of conversation, Note all key points and Summarize in short",
+                "system_prompt": "Summarize conversation between user and assistant.Analyze the context of conversation, Note all key points and Summarize.Make sure summary contains accurate context.",
                 "user_prompt": conversation_hist,
                 "model": "llama3.2:3b",
             })
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         reply = llm.chat_with_ollama({
                 "system_prompt": SYS_PROMPT,
                 "user_prompt": query,
-                "model":"deepseek-r1:8b",
+                "model":"rnj-1:latest",
                 "stream_reasoning_response": True,
                 'temperature': temp
                 })
@@ -99,6 +99,7 @@ if __name__ == "__main__":
         for char in reply:
             print(char, end='', flush=True)
             reply_str += char
+        print(f"\n[Temperature: {temp}]\n",end="\n\n",flush=True)
         conversation_hist = summarizer(f"user:{query}\nassistant:{reply_str}", summary)
         if "bye" in query or query == "exit":
             break
