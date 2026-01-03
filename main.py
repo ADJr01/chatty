@@ -73,14 +73,14 @@ if __name__ == "__main__":
         if len(query) < 2:
             print(query)
             query = ""
-            print()
+            print("",flush=True,end='\n')
             continue
         #? temperature calculator according to query
 
         if len(conversation_hist) > 1:  # getting summary
             # ! SUMMARIZER
             summary = llm.chat_with_ollama({
-                "system_prompt": "Summarize conversation between user and assistant.Analyze the context of conversation, Note all key points and Summarize.Make sure summary contains accurate context.",
+                "system_prompt": "Summarize conversation between user and assistant.Analyze the context of conversation, Note all key points Summary keep context accurate.Make sure summary contains accurate context.",
                 "user_prompt": conversation_hist,
                 "model": "llama3.2:3b",
             })
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         reply = llm.chat_with_ollama({
                 "system_prompt": SYS_PROMPT,
                 "user_prompt": query,
-                "model":"rnj-1:latest",
+                "model":"deepseek-r1:8b",
                 "stream_reasoning_response": True,
                 'temperature': temp
                 })
